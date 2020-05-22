@@ -8,12 +8,18 @@ void initEmailController(){
 bool sendLetter(const char *subject, const char *message, const char *attachmentPath, bool isHtml, bool retryUntilSuccess){
   log_d("Sending letter");
 
-  char *server = PERSONAL_SMTP_SERVER;
-  char *port = PERSONAL_SMTP_PORT;
-	char *login = PERSONAL_SMTP_LOGIN;
-  char *password = PERSONAL_SMTP_PASSWORD;
-  char *sender = PERSONAL_EMAIL_SENDER;
-  char *recipient = PERSONAL_EMAIL_RECIPIENT;
+  // char *server = PERSONAL_SMTP_SERVER;
+  // char *port = PERSONAL_SMTP_PORT;
+	// char *login = PERSONAL_SMTP_LOGIN;
+  // char *password = PERSONAL_SMTP_PASSWORD;
+  // char *sender = PERSONAL_EMAIL_SENDER;
+  // char *recipient = PERSONAL_EMAIL_RECIPIENT;
+  char *server = GetEmailValue(EMAIL_SMTP_SERVER, (char *)malloc(STRING_LENGTH));
+  char *port = GetEmailValue(EMAIL_SMTP_PORT, (char *)malloc(STRING_LENGTH));
+  char *login = GetEmailValue(EMAIL_LOGIN, (char *)malloc(STRING_LENGTH));
+  char *password = GetEmailValue(EMAIL_PASS, (char *)malloc(STRING_LENGTH));
+  char *sender = GetEmailValue(EMAIL_SMTP_SENDER, (char *)malloc(STRING_LENGTH));
+  char *recipient = GetEmailValue(EMAIL_SMTP_RECIPIENT, (char *)malloc(STRING_LENGTH));
 
   log_d("Email:\n ---\n Smtp server: %s\n Smtp port: %s\n Smtp login: %s\n Smtp sender name: %s\n ---\n Recipient: %s\n Subject: %s\n Message:\n %s\n Attachement: %s\n ---\n",
     server,

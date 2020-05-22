@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include <BtController.h>
 #include <EmailController.h>
 #include <WiFiController.h>
 #include <SDCardController.h>
@@ -31,8 +31,8 @@ void processCaptureTask() {
 
   encodedImage = takeCaptureToBase64(encodedImage, bufferLength);
   log_d("Current bufferLength: %d", bufferLength);
-  // int response = postBufferToServer(encodedImage, bufferLength, "http://images-storage-server.herokuapp.com/Image/Send/");
-  int response = postBufferToServer(encodedImage, bufferLength, "http://192.168.0.104:9090/");
+  int response = postBufferToServer(encodedImage, bufferLength, "http://images-storage-server.herokuapp.com/Image/Send/");
+  // int response = postBufferToServer(encodedImage, bufferLength, "http://192.168.0.104:9090/");
   log_d("post response status: %d", response);
   free(encodedImage);
   
@@ -44,35 +44,73 @@ void processCaptureTask() {
   // free(captureName);
 }
 
+bool stateIsConfig;
 
 void setup() {
 
   // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //Disable brownout detector
 
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  Serial.println("Started");
 
-  connectToWiFi(PERSONAL_WIFI_SSID, PERSONAL_WIRI_PASSWORD);
+  Serial.begin(115200);
+
+  InitMemoryController();
+  if (!initCameraController()) {
+    log_e("Failed to init Camera.");
+    esp_restart();
+  }
+
+  uint8_t resetPin = GPIO_NUM_16;
+  pinMode(resetPin, INPUT_PULLUP);
+  int resetValue = digitalRead(resetPin);
+
+  stateIsConfig = IsConfigStateInMemory() || !resetValue;
+
+  if (!stateIsConfig) {
+    log_d("Connecting to wifi...");
+    stateIsConfig = (GetWiFiCredentialsAmountFromMemory() == 0) || !connectToAnyWiFiFromMemory();
+    if (stateIsConfig) {
+      log_d("Couldn't connect.");
+    } else {
+      syncTime();
+      char *buffer = (char *)malloc(STRING_LENGTH);
+      log_d("%s", getDateTimeStr(buffer, STRING_LENGTH));
+      free(buffer);
+    }
+    captureNotifier.attach(60, captureNotify);
+    notification = true;
+  }
+
+  if (stateIsConfig) {
+    log_d("Config mode.");
+    wiFiControllerOff();
+    InitBtController();
+  } else {
+    log_d("working mode.");
+    // SendLetter(
+    //   "First letter",
+    //   "I've started to work. Everything is ok so far.",
+    //   false
+    // );
+    initEmailController();
+  }
+
+
 
   // if (!initSDCardController()) {
   //   log_e("Failed to init SD card.");
   //   esp_restart();
   // }
 
-  if (!initCameraController()) {
-    log_e("Failed to init Camera.");
-    esp_restart();
-  }
-
-  delay(500);
-
-  captureNotifier.attach(60, captureNotify);
-  notification = true;
   led.attach(1, switchLed);
   pinMode(GPIO_NUM_33, OUTPUT);
 }
 
+
 void loop() {
-  processCaptureTask();
+  if (stateIsConfig){
+    ProcessBt();
+  } else {
+    processCaptureTask();
+  }
+  delay(100);
 }

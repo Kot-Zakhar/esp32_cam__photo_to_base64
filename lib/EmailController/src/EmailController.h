@@ -2,6 +2,7 @@
 #define _EMAIL_CONTROLLER_H_
 
 #include <ESP32_MailClient.h>
+#include <MemoryController.h>
 #include <SDCardController.h>
 #include "personal_info_smtp.h"
 
