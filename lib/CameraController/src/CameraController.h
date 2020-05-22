@@ -9,5 +9,6 @@ bool initCameraController();
 void turnLightOff();
 void turnLightOn();
 char *takeCaptureAndSaveToSD(char *fileNameBuf, size_t fileNameLen);
+char *takeCaptureToBase64(char *encodedBuffer, int &bufferLength);
 
 #endif

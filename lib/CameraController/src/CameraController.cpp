@@ -4,6 +4,7 @@
 
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
+#include "Base64.h"
 
 #define EEPROM_SIZE 2
 
@@ -33,16 +34,20 @@ bool initCameraController() {
   
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   //                      for larger pre-allocated frame buffer.
-  if(psramFound()){
-    config.frame_size = FRAMESIZE_UXGA;
-    config.jpeg_quality = 10;
-    config.fb_count = 2;
-  } else {
-    config.frame_size = FRAMESIZE_SVGA;
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
-  }
+  // if(psramFound()){
+  //   config.frame_size = FRAMESIZE_UXGA;
+  //   config.jpeg_quality = 10;
+  //   config.fb_count = 2;
+  // } else {
+  //   config.frame_size = FRAMESIZE_SVGA;
+  //   config.jpeg_quality = 12;
+  //   config.fb_count = 1;
+  // }
 
+  config.frame_size = FRAMESIZE_VGA;
+  config.jpeg_quality = 12;
+  config.fb_count = 1;
+  
   
 
   // camera init
@@ -72,6 +77,33 @@ char *takeCaptureAndSaveToSD(char *fileNameBuf, size_t fileNameLen) {
   turnLightOff();
   
   return fileNameBuf;
+}
+
+char *takeCaptureToBase64(char *encodedBuffer, int &bufferLength) {
+  turnLightOn();
+  delay(100);
+
+  camera_fb_t *fb = esp_camera_fb_get();
+
+  turnLightOff();
+
+  int actualLength = Base64.encodedLength(fb->len);
+  log_d("Size of image: %d", fb->len);
+  log_d("Length of encoded string: %d", actualLength);
+  // if (actualLength > bufferLength) {
+  encodedBuffer = (char *)realloc(encodedBuffer, actualLength + 25);
+  bufferLength = actualLength + 25;
+  // log_d("reallocating memory for image");
+  // }
+  const char *header = "data:image/jpg;base64,";
+  sprintf(encodedBuffer, header);
+  char *base64Start = encodedBuffer + strlen(header);
+
+  Base64.encode(base64Start, (char *)fb->buf, fb-> len);
+  
+  // log_d("Encoded message:\n%s", encodedBuffer);
+
+  return encodedBuffer;
 }
 
 void turnLightOn() {

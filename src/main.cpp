@@ -26,12 +26,22 @@ void processCaptureTask() {
     return;
   notification = false;
 
-  char *captureName = (char *)malloc(100);
-  // captureName = strcpy(captureName, "TempPic22323-");
-  captureName = takeCaptureAndSaveToSD(captureName, 100);
-  log_i("Took a capture and saved to: %s", captureName);
-  sendLetter("Capture from ESP32-CAM", "Capture is in attachments.", captureName);
-  free(captureName);
+  int bufferLength = 1024;
+  char *encodedImage = (char *)malloc(bufferLength);
+
+  encodedImage = takeCaptureToBase64(encodedImage, bufferLength);
+  log_d("Current bufferLength: %d", bufferLength);
+  // int response = postBufferToServer(encodedImage, bufferLength, "http://images-storage-server.herokuapp.com/Image/Send/");
+  int response = postBufferToServer(encodedImage, bufferLength, "http://192.168.0.104:9090/");
+  log_d("post response status: %d", response);
+  free(encodedImage);
+  
+  // char *captureName = (char *)malloc(100);
+  // // captureName = strcpy(captureName, "TempPic22323-");
+  // captureName = takeCaptureAndSaveToSD(captureName, 100);
+  // log_i("Took a capture and saved to: %s", captureName);
+  // sendLetter("Capture from ESP32-CAM", "Capture is in attachments.", captureName);
+  // free(captureName);
 }
 
 
@@ -45,10 +55,10 @@ void setup() {
 
   connectToWiFi(PERSONAL_WIFI_SSID, PERSONAL_WIRI_PASSWORD);
 
-  if (!initSDCardController()) {
-    log_e("Failed to init SD card.");
-    esp_restart();
-  }
+  // if (!initSDCardController()) {
+  //   log_e("Failed to init SD card.");
+  //   esp_restart();
+  // }
 
   if (!initCameraController()) {
     log_e("Failed to init Camera.");
