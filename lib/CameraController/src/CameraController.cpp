@@ -4,7 +4,7 @@
 
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
-#include "Base64.h"
+#include "base64.h"
 
 #define EEPROM_SIZE 2
 
@@ -87,21 +87,20 @@ char *takeCaptureToBase64(char *encodedBuffer, int &bufferLength) {
 
   turnLightOff();
 
-  int actualLength = Base64.encodedLength(fb->len);
+  int rawLength = fb->len;
+  int actualLength = (rawLength + 2 - ((rawLength + 2) % 3)) / 3 * 4; // A formula was stolen from Base64 library.
   log_d("Size of image: %d", fb->len);
   log_d("Length of encoded string: %d", actualLength);
-  // if (actualLength > bufferLength) {
+
   encodedBuffer = (char *)realloc(encodedBuffer, actualLength + 25);
   bufferLength = actualLength + 25;
-  // log_d("reallocating memory for image");
-  // }
+
   const char *header = "data:image/jpg;base64,";
   sprintf(encodedBuffer, header);
   char *base64Start = encodedBuffer + strlen(header);
 
-  Base64.encode(base64Start, (char *)fb->buf, fb-> len);
-  
-  // log_d("Encoded message:\n%s", encodedBuffer);
+  String encoded = base64::encode(fb->buf, fb-> len);
+  strcpy(base64Start, encoded.c_str());
 
   return encodedBuffer;
 }
