@@ -73,7 +73,7 @@ int postBufferToServer(const char *encodedImage, int length, const char *path) {
   serializeJson(doc, buffer, lenOfJson);
   http.addHeader("Content-Type", "application/json");
 
-  http.setTimeout(1000);
+  http.setTimeout(30000);
   int response = http.POST(buffer);
 
   free(buffer);
@@ -132,5 +132,6 @@ bool connectToAnyWiFiFromMemory(){
   }
   free(ssid);
   free(password);
+
   return result;
 }

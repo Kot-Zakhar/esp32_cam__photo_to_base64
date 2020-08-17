@@ -45,7 +45,7 @@ bool initCameraController() {
   // }
 
   config.frame_size = FRAMESIZE_VGA;
-  config.jpeg_quality = 12;
+  config.jpeg_quality = 20;
   config.fb_count = 1;
   
   

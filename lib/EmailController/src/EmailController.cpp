@@ -2,9 +2,6 @@
 
 SMTPData smtpData;
 
-void initEmailController(){
-}
-
 bool sendLetter(const char *subject, const char *message, const char *attachmentPath, bool isHtml, bool retryUntilSuccess){
   log_d("Sending letter");
 
